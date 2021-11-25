@@ -177,32 +177,32 @@ else
 		    clear
 		    ;;
    esac
-#   paru_msg () {
-#    	echo "#######################"
-#    	echo "### INSTALLING PARU ###"
-#    	echo "#######################"
-#	echo ""
-#   }
-#   paru_msg
-#   sudo pacman -S --noconfirm --needed  base-devel
-#   clear
-#   paru_msg
-#   git clone https://aur.archlinux.org/paru.git
-#   clear
-#   paru_msg
-#   pushd paru
-#   makepkg -si
-#   clear
-#   popd
-#
-#   echo "INSTALLING DRIVERS"
-#   echo ""
-#   sudo paru -S --needed --noconfirm xf86-video-vesa mesa mesa-libgl
-#   clear
-#   for driver in "${!drivers[@]}"
-#   do
-#       install_driver $driver
-#   done
+   paru_msg () {
+    	echo "#######################"
+    	echo "### INSTALLING PARU ###"
+    	echo "#######################"
+	echo ""
+   }
+   paru_msg
+   sudo pacman -S --noconfirm --needed  base-devel
+   clear
+   paru_msg
+   git clone https://aur.archlinux.org/paru.git
+   clear
+   paru_msg
+   pushd paru
+   makepkg -si
+   clear
+   popd
+
+   echo "INSTALLING DRIVERS"
+   echo ""
+   sudo paru -S --needed --noconfirm xf86-video-vesa mesa mesa-libgl
+   clear
+   for driver in "${!drivers[@]}"
+   do
+       install_driver $driver
+   done
    echo "INSTALLING OTHER PACKAGES"
    paru -S --needed --noconfirm "${packages[@]}"
    echo ""
