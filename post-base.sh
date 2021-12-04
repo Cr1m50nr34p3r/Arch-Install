@@ -103,6 +103,10 @@ else
 	#mbsync
 	#mu
 	dash
+	virtualbox-guest-iso
+	virtualbox-ext-oracle
+	virtualbox
+	qbittorrent
     )
     pip_packages=(
 	    jedi
