@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
+################################################################
+####    _             _          ___           _        _ _ ####
+#######/ \   _ __ ___| |__      |_ _|_ __  ___| |_ __ _| | |####
+####  / _ \ | '__/ __| '_ \ _____| || '_ \/ __| __/ _` | | |####
+#### / ___ \| | | (__| | | |_____| || | | \__ \ || (_| | | |####
+####/_/   \_\_|  \___|_| |_|    |___|_| |_|___/\__\__,_|_|_|####
+################################################################
+
+
 set -euo pipefail
-pushd $HOME
-if  (( $EUID == 0 ))
+pushd "$HOME"
+if  (( "$EUID" == 0 ))
 then
     echo "PLEASE DO NOT RUN THE SCRIPT AS ROOT"
     popd
@@ -10,8 +19,6 @@ else
     
     ############################################################################################
     ### Variables
-   # USERNAME
-   username="$USER"
    # Drivers
     declare -A drivers
     drivers['intel']="xf86-video-intel"
@@ -33,6 +40,8 @@ else
         bluez-utils
         blueman
         alsa-utils
+        sof-firmware
+        dnsmasq
         pulseaudio
         pulseaudio-alsa
         pulseaudio-bluetooth
@@ -46,6 +55,9 @@ else
         zathura
         emacs
         dunst
+        network-manager-applet 
+        blueberry
+        xfce4-power-manager
         mpv
         dolphin
         ranger
@@ -63,9 +75,7 @@ else
         ripgrep
         lightdm
         lightdm-webkit2-greeter
-        ncdu
-        wget
-        emacs
+        wget emacs
         bandwhich
         acpi
         brave-bin
@@ -82,7 +92,6 @@ else
         pup
         python-pip
         tmux
-        connman
         ntfs-3g
 	unimatrix
 	pyenv
@@ -103,10 +112,13 @@ else
 	#mbsync
 	#mu
 	dash
-	virtualbox-guest-iso
-	virtualbox-ext-oracle
-	virtualbox
 	qbittorrent
+    qemu
+    libvirt
+    bridge-utils
+    virt-install
+    virt-manager
+
     )
     pip_packages=(
 	    jedi
@@ -126,7 +138,7 @@ else
     install_driver () {
 
         printf "$1 drivers: "
-        read is_driver
+        read -r is_driver
         case $is_driver in
         "y" | "Y" | "")
             paru -S --noconfirm --needed ${drivers[$1]}
@@ -138,7 +150,7 @@ else
             ;;
         *)
             echo "please enter Y/n"
-            install_driver $1
+            install_driver "$1"
             ;;
         esac
 
@@ -148,7 +160,7 @@ else
     echo "############################################################"
     echo "### BEFORE RUNNING THE SCRIPT ENABLE MULTILIB REPOSITORY ###"
     echo "### FOR FASTER SETUP ALSO ENABLE PARALLEL DOWNLOADS ########"
-    echo "### ( SET PARALLEL TO $(( $(nproc)+1 )) ) #################"
+    echo "################# ( SET PARALLEL TO $(( $(nproc)+1 ))#####################"
     echo "############################################################"
     sleep 3
     clear
@@ -159,15 +171,15 @@ else
     sudo pacman -Syy
     clear
     printf "Update Mirrors (THIS MAY TAKE AN HOUR OR 2 ) : "
-    read up_mirror
+    read -r up_mirror
     case $up_mirror in
 	    'y' | 'Y' )
 		    clear
 		    mirror_msg () {
     		    	echo "########################"
-		    	echo "### UPDATING MIRRORS ###"
+                    echo "### UPDATING MIRRORS ###"
     		    	echo "########################"
-			echo ""
+                    echo ""
 		}
 		    mirror_msg
 		    sudo pacman -S reflector rsync
@@ -191,6 +203,8 @@ else
    sudo pacman -S --noconfirm --needed  base-devel
    clear
    paru_msg
+   mkdir -pv "$HOME/Github"
+   pushd Github 
    git clone https://aur.archlinux.org/paru.git
    clear
    paru_msg
@@ -199,7 +213,9 @@ else
    clear
    popd
 
-   echo "INSTALLING DRIVERS"
+   echo "##########################"
+   echo "### INSTALLING DRIVERS ###"
+   echo "##########################"
    echo ""
    sudo paru -S --needed --noconfirm xf86-video-vesa mesa mesa-libgl
    clear
@@ -207,50 +223,53 @@ else
    do
        install_driver $driver
    done
-   echo "INSTALLING OTHER PACKAGES"
+   echo "#################################"
+   echo "### INSTALLING OTHER PACKAGES ###"
+   echo "#################################"
    paru -S --needed --noconfirm "${packages[@]}"
    echo ""
    clear
-   echo "INSTALLING PIP PACKAGES"
+   echo "###############################"
+   echo "### INSTALLING PIP PACKAGES ###"
+   echo "###############################"
+
    pip install "${pip_packages[@]}"
    clear
-   echo "INSTALLING DOOM EMACS"
-   echo ""
-   git clone --depth 1 https://github.com/hlissner/doom-emacs ~/.emacs.d
+   echo "##################################"
+   echo "### SETTING UP GRUB BOOTLOADER ###"
+   echo "##################################"
+   echo "DETECTING OTHER OS"
+   sudo os-prober
+   echo "updating grub ....."
+   sudo grub-mkconfig -o /boot/grub/grub.cfg >> /dev/null
+   sudo sed -i "s/^#GRUB_DISABLE_OS_PROBER/GRUB_DISABLE_OS_PROBER/g"
+   sudo grub-mkconfig -o /boot/grub/grub.cfg 
+   echo "ADDING GRUB BOOTLOADER THEME"
+   pushd "$HOME/Github"
+   git clone https://github.com/ChrisTitusTech/Top-5-Bootloader-Themes
+   sudo Top-5-Bootloader-Themes/install.sh
+   clear 
+   echo "###############################"
+   echo "### SETTING UP VIRT-MANAGER ###"
+   echo "###############################"
+   sudo systemctl start libvirtd
+   sudo virsh net-start default
+   sudo virsh net-autostart default
+   sudo virsh net-list --all
+   sudo usermod -aG libvirt "$USER"
    clear
-   ~/.emacs.d/bin/doom install
-   clear
-   ~/.emacs.d/bin/doom sync
-   echo "SETTING UP XORG"
+   echo "########################"
+   echo "### SETTING UP XORG ####"
+   echo "########################"
    touch .xinitrc
    echo "exec awesome" >> .xinitrc
-   echo "ENABLING SERVICES ...."
+   echo "#########################"
+   echo "### ENABLING SERVICES ###"
+   echo "#########################"
    sudo systemctl enable lightdm
    sudo systemctl enable bluetooth
-   sudo systemctl enable connman
+   sudo systemctl enable libvertd
    clear
-   echo "########################################"
-   echo "### SETTING UP CONNMAN RESUME SERVCE ###"
-   echo "########################################"
-
-   sudo touch /etc/systemd/system/connman-resume.service
-   echo "switching to root user..."
-   sudo su
-   echo "[Unit]" >>  /etc/systemd/system/connman-resume.service
-   echo "Description=Restart connman on resume." >>  /etc/systemd/system/connman-resume.service
-   echo "After=suspend.target" >>  /etc/systemd/system/connman-resume.service
-   echo "" >>  /etc/systemd/system/connman-resume.service
-   echo "[Service]" >>  /etc/systemd/system/connman-resume.service
-   echo "Type=oneshot" >>  /etc/systemd/system/connman-resume.service
-   echo "RemainAfterExit=no" >>  /etc/systemd/system/connman-resume.service
-   echo "ExecStart=/usr/bin/systemctl restart connman" >>  /etc/systemd/system/connman-resume.service
-   echo "ExecStart=/usr/bin/echo connman-resume: Successfully restarted connman" >>  /etc/systemd/system/connman-resume.service
-   echo "" >>  /etc/systemd/system/connman-resume.service
-   echo "[Install]" >>  /etc/systemd/system/connman-resume.service
-   echo "WantedBy=suspend.target" >>  /etc/systemd/system/connman-resume.service
-   echo "switching back to $username"
-   su $username
-   sudo systemctl enable connman-resume
    echo "#############################"
    echo "### ARCH INSTALL COMPLETE ###"
    echo "#############################"
