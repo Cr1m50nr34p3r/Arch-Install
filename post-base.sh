@@ -113,11 +113,13 @@ else
 	#mu
 	dash
 	qbittorrent
-    qemu
-    libvirt
-    bridge-utils
-    virt-install
-    virt-manager
+    virt-manager 
+    qemu 
+    vde2 
+    ebtables 
+    dnsmasq 
+    bridge-utils 
+    openbsd-netcat
 
     )
     pip_packages=(
